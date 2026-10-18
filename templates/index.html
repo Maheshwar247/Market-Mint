@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarketMint — Local AI Marketing Assistant</title>
+  <meta name="description" content="Generate high-converting, honest marketing copy for your products, WhatsApp broadcasts, and social posts using 100% local open-weight AI.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <!-- Top Application Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+            <path d="M2 17l10 5 10-5"></path>
+            <path d="M2 12l10 5 10-5"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">MarketMint</span>
+          <span class="brand-tag">Local AI Assistant</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Model Selector & Status -->
+        <div class="model-select-wrapper">
+          <label for="modelSelect" class="sr-only">Active AI Model</label>
+          <select id="modelSelect" class="model-select" title="Selected Ollama Model">
+            <option value="{{ default_model }}">{{ default_model }} (Default)</option>
+          </select>
+        </div>
+
+        <!-- Connection Status Pill -->
+        <div id="connectionStatus" class="status-pill status-checking" role="status" aria-live="polite">
+          <span class="status-dot"></span>
+          <span id="statusText" class="status-text">Checking Ollama...</span>
+          <button id="refreshStatusBtn" class="status-refresh" title="Check connection to Ollama" aria-label="Refresh Ollama connection">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+            </svg>
+          </button>
+        </div>
+
+        <span class="badge-hacktoberfest">Hacktoberfest 2026</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-wrapper">
+    <!-- Hero / Welcome Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <div class="hero-pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>100% Local Open-Weight AI &bull; Zero Cloud Subscriptions &bull; Total Privacy</span>
+        </div>
+        <h1 class="hero-title">Make your next sale easier.</h1>
+        <p class="hero-subtitle">
+          MarketMint empowers small business owners, freelancers, and local shops to craft professional marketing copy in seconds. Powered directly on your hardware with Ollama and Gemma 2B.
+        </p>
+      </div>
+
+      <!-- Quick Setup Alert (Shown if Ollama is unreachable) -->
+      <div id="ollamaAlert" class="alert-card alert-warning hidden" role="alert">
+        <div class="alert-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <div class="alert-body">
+          <strong id="alertTitle">Local AI is offline</strong>
+          <p id="alertMessage">Please ensure Ollama is running. Open your terminal and run <code>ollama serve</code>, then verify the model with <code>ollama pull gemma2:2b</code>.</p>
+        </div>
+        <button id="alertDismissBtn" class="alert-dismiss" aria-label="Dismiss alert">&times;</button>
+      </div>
+
+      <!-- Feature Selection Tabs -->
+      <nav class="feature-tabs" aria-label="Generator Types">
+        <button class="feature-tab active" data-tab="product" id="tab-product" aria-selected="true" role="tab">
+          <div class="tab-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+          </div>
+          <div class="tab-text">
+            <span class="tab-title">Product Descriptions</span>
+            <span class="tab-desc">Catchy titles, benefits &amp; CTAs</span>
+          </div>
+        </button>
+
+        <button class="feature-tab" data-tab="whatsapp" id="tab-whatsapp" aria-selected="false" role="tab">
+          <div class="tab-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+          </div>
+          <div class="tab-text">
+            <span class="tab-title">WhatsApp Promos</span>
+            <span class="tab-desc">Ready-to-send broadcast chats</span>
+          </div>
+        </button>
+
+        <button class="feature-tab" data-tab="social" id="tab-social" aria-selected="false" role="tab">
+          <div class="tab-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+              <polyline points="16 6 12 2 8 6"></polyline>
+              <line x1="12" y1="2" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <div class="tab-text">
+            <span class="tab-title">Social Media Captions</span>
+            <span class="tab-desc">Instagram, Facebook &amp; hashtags</span>
+          </div>
+        </button>
+      </nav>
+    </section>
+
+    <!-- Workspace Grid -->
+    <div class="workspace-grid">
+      <!-- Left Column: Forms -->
+      <section class="form-container card">
+        <!-- Product Description Form -->
+        <form id="productForm" class="generator-form active">
+          <div class="form-header">
+            <h2 class="form-title">Product Description Generator</h2>
+            <button type="button" class="btn-sample" id="sampleProductBtn" title="Load an example product">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              <span>Load Example</span>
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label for="prod_name">Product Name <span class="required">*</span></label>
+            <input type="text" id="prod_name" name="product_name" placeholder="e.g. Handcrafted Ceramic Coffee Mug" maxlength="150" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label for="prod_category">Category</label>
+              <input type="text" id="prod_category" name="category" placeholder="e.g. Kitchen &amp; Dining, Ceramics" maxlength="100">
+            </div>
+            <div class="form-group half">
+              <label for="prod_price">Price / Offer (optional)</label>
+              <input type="text" id="prod_price" name="price" placeholder="e.g. ₹499 / $18" maxlength="100">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="prod_features">Key Features &amp; Specifications <span class="required">*</span></label>
+            <textarea id="prod_features" name="features" rows="4" placeholder="List the real features: e.g. 350ml capacity, microwave and dishwasher safe, lead-free natural glaze, ergonomic thumb rest handle" maxlength="2000" required></textarea>
+            <span class="field-hint">Only include true features. MarketMint will never invent specifications.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="prod_audience">Target Audience</label>
+            <input type="text" id="prod_audience" name="audience" placeholder="e.g. Coffee lovers, home office workers, gift seekers" maxlength="300">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label for="prod_language">Language</label>
+              <select id="prod_language" name="language">
+                <option value="English" selected>English</option>
+                <option value="Hindi">Hindi (हिन्दी)</option>
+                <option value="Telugu">Telugu (తెలుగు)</option>
+                <option value="Tamil">Tamil (தமிழ்)</option>
+              </select>
+            </div>
+            <div class="form-group half">
+              <label for="prod_tone">Tone</label>
+              <select id="prod_tone" name="tone">
+                <option value="Friendly" selected>Friendly</option>
+                <option value="Professional">Professional</option>
+                <option value="Playful">Playful</option>
+                <option value="Persuasive">Persuasive</option>
+                <option value="Minimal">Minimal</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="btnSubmitProduct">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span>Generate Product Copy</span>
+            </button>
+            <button type="reset" class="btn btn-secondary">Clear</button>
+          </div>
+        </form>
+
+        <!-- WhatsApp Promotion Form -->
+        <form id="whatsappForm" class="generator-form">
+          <div class="form-header">
+            <h2 class="form-title">WhatsApp Promotional Message</h2>
+            <button type="button" class="btn-sample" id="sampleWhatsappBtn" title="Load an example broadcast">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <span>Load Example</span>
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label for="wa_product">Product / Service Name <span class="required">*</span></label>
+            <input type="text" id="wa_product" name="product_service" placeholder="e.g. Weekend Sourdough Bread Box" maxlength="150" required>
+          </div>
+
+          <div class="form-group">
+            <label for="wa_details">Promotion / Offer Details <span class="required">*</span></label>
+            <textarea id="wa_details" name="offer_details" rows="4" placeholder="e.g. Freshly baked Saturday morning. Includes 1 country loaf + 1 rosemary focaccia. Orders close Friday 6 PM. Free store pickup or local delivery within 5km." maxlength="2000" required></textarea>
+            <span class="field-hint">Never invent discounts or deadlines. State the exact offer.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="wa_audience">Target Audience</label>
+            <input type="text" id="wa_audience" name="audience" placeholder="e.g. Existing regular customers, neighborhood foodies" maxlength="300">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label for="wa_language">Language</label>
+              <select id="wa_language" name="language">
+                <option value="English" selected>English</option>
+                <option value="Hindi">Hindi (हिन्दी)</option>
+                <option value="Telugu">Telugu (తెలుగు)</option>
+                <option value="Tamil">Tamil (தமிழ்)</option>
+              </select>
+            </div>
+            <div class="form-group half">
+              <label for="wa_tone">Tone</label>
+              <select id="wa_tone" name="tone">
+                <option value="Friendly" selected>Friendly</option>
+                <option value="Professional">Professional</option>
+                <option value="Playful">Playful</option>
+                <option value="Persuasive">Persuasive</option>
+                <option value="Minimal">Minimal</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="btnSubmitWhatsapp">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span>Generate WhatsApp Message</span>
+            </button>
+            <button type="reset" class="btn btn-secondary">Clear</button>
+          </div>
+        </form>
+
+        <!-- Social Media Caption Form -->
+        <form id="socialForm" class="generator-form">
+          <div class="form-header">
+            <h2 class="form-title">Social Media Caption Generator</h2>
+            <button type="button" class="btn-sample" id="sampleSocialBtn" title="Load an example post">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <span>Load Example</span>
+            </button>
+          </div>
+
+          <!-- Platform Selector Radio Buttons -->
+          <div class="form-group">
+            <label>Platform <span class="required">*</span></label>
+            <div class="platform-selector" role="radiogroup" aria-label="Social Media Platform">
+              <label class="platform-option">
+                <input type="radio" name="platform" value="instagram" checked>
+                <span class="platform-card">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                  </svg>
+                  <span>Instagram</span>
+                </span>
+              </label>
+
+              <label class="platform-option">
+                <input type="radio" name="platform" value="facebook">
+                <span class="platform-card">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                  </svg>
+                  <span>Facebook</span>
+                </span>
+              </label>
+
+              <label class="platform-option">
+                <input type="radio" name="platform" value="general">
+                <span class="platform-card">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                  </svg>
+                  <span>General</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="soc_topic">Product or Post Topic <span class="required">*</span></label>
+            <input type="text" id="soc_topic" name="product_topic" placeholder="e.g. Raw Forest Honey Jar Restock" maxlength="150" required>
+          </div>
+
+          <div class="form-group">
+            <label for="soc_details">Key Highlights &amp; Story <span class="required">*</span></label>
+            <textarea id="soc_details" name="details" rows="4" placeholder="e.g. Harvested from wild Nilgiri forest bees. Completely raw and unheated. Only 40 jars in this micro-batch. Rich floral notes." maxlength="2000" required></textarea>
+            <span class="field-hint">Authentic stories engage customers better than exaggerated claims.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="soc_audience">Target Audience</label>
+            <input type="text" id="soc_audience" name="audience" placeholder="e.g. Wellness enthusiasts, organic food shoppers" maxlength="300">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label for="soc_language">Language</label>
+              <select id="soc_language" name="language">
+                <option value="English" selected>English</option>
+                <option value="Hindi">Hindi (हिन्दी)</option>
+                <option value="Telugu">Telugu (తెలుగు)</option>
+                <option value="Tamil">Tamil (தமிழ்)</option>
+              </select>
+            </div>
+            <div class="form-group half">
+              <label for="soc_tone">Tone</label>
+              <select id="soc_tone" name="tone">
+                <option value="Friendly" selected>Friendly</option>
+                <option value="Professional">Professional</option>
+                <option value="Playful">Playful</option>
+                <option value="Persuasive">Persuasive</option>
+                <option value="Minimal">Minimal</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="btnSubmitSocial">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span>Generate Social Caption</span>
+            </button>
+            <button type="reset" class="btn btn-secondary">Clear</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Right Column: Results Panel -->
+      <section class="results-container card" id="resultsPanel" aria-live="polite">
+        <div class="results-header">
+          <div class="results-title-group">
+            <h2 class="results-title">Generated Copy</h2>
+            <span id="resultsModelBadge" class="badge-model">Local AI</span>
+          </div>
+
+          <div class="results-controls">
+            <span id="charCount" class="char-count hidden">0 characters</span>
+            <button id="toggleEditBtn" class="btn-icon hidden" title="Toggle Editable View" aria-label="Toggle Editable View">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+              <span id="toggleEditText">Edit</span>
+            </button>
+            <button id="copyBtn" class="btn-copy hidden" title="Copy to clipboard" aria-label="Copy generated text">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span id="copyBtnText">Copy Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Regional language disclaimer (hidden by default) -->
+        <div id="languageNotice" class="language-notice hidden">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>Model translations into regional languages may vary. Please review and refine the text for your audience.</span>
+        </div>
+
+        <!-- State 1: Empty Placeholder -->
+        <div id="resultsEmpty" class="results-state state-empty">
+          <div class="empty-illustration" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
+          <h3>Ready to craft your marketing copy</h3>
+          <p>Fill out the form on the left or click <strong>Load Example</strong> to test with real sample data. Your AI runs 100% locally on your machine.</p>
+          <div class="empty-features-list">
+            <div class="empty-feature-item">
+              <span class="check-icon">&check;</span>
+              <span>Zero data sent to cloud servers</span>
+            </div>
+            <div class="empty-feature-item">
+              <span class="check-icon">&check;</span>
+              <span>Truthful copy based strictly on your input</span>
+            </div>
+            <div class="empty-feature-item">
+              <span class="check-icon">&check;</span>
+              <span>Fast one-click copy to clipboard</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- State 2: Loading State -->
+        <div id="resultsLoading" class="results-state state-loading hidden">
+          <div class="spinner-ring" aria-hidden="true"></div>
+          <h3 id="loadingTitle">Consulting Local Gemma AI...</h3>
+          <p id="loadingSubtitle">Generating thoughtful, truthful marketing copy. This typically takes 5–20 seconds depending on your CPU/GPU.</p>
+          <div class="loading-progress-bar">
+            <div class="progress-indicator"></div>
+          </div>
+        </div>
+
+        <!-- State 3: Success State -->
+        <div id="resultsSuccess" class="results-state state-success hidden">
+          <!-- Formatted container (safe DOM nodes inserted via JS textContent) -->
+          <div id="formattedOutput" class="formatted-output"></div>
+          <!-- Editable raw textarea (toggled by Edit button) -->
+          <textarea id="rawOutput" class="raw-output hidden" aria-label="Editable marketing copy"></textarea>
+        </div>
+
+        <!-- State 4: Error State -->
+        <div id="resultsError" class="results-state state-error hidden">
+          <div class="error-icon" aria-hidden="true">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+          </div>
+          <h3 id="errorTitle">Generation Encountered an Issue</h3>
+          <p id="errorMessage" class="error-description">Could not generate content at this time.</p>
+          <div id="errorTroubleshoot" class="error-troubleshoot hidden">
+            <h4>Quick Fix:</h4>
+            <pre><code id="troubleshootCmd">ollama serve</code></pre>
+          </div>
+          <div class="error-actions">
+            <button id="retryBtn" class="btn btn-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+              </svg>
+              <span>Retry Generation</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Educational & Architectural Value Section -->
+    <section class="value-section card">
+      <div class="value-grid">
+        <div class="value-item">
+          <div class="value-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <h3>Why Local Open-Weight AI?</h3>
+          <p>
+            Unlike commercial AI APIs that cost monthly fees and upload your proprietary product ideas, <strong>MarketMint runs entirely on your own device</strong> via Ollama and Google's lightweight open-weight Gemma 2B model.
+          </p>
+        </div>
+
+        <div class="value-item">
+          <div class="value-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <h3>Zero Hallucination Guardrails</h3>
+          <p>
+            Small businesses need trust, not fake hype. MarketMint strictly instructs the model to <strong>never fabricate discounts, fake reviews, or unverified claims</strong> that you didn't specify in the form.
+          </p>
+        </div>
+
+        <div class="value-item">
+          <div class="value-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <h3>No Subscriptions or Keys</h3>
+          <p>
+            No credit card, no API keys, and no rate limits. Once you pull <code>gemma2:2b</code> locally, you can generate hundreds of product descriptions and marketing messages even when offline.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Application Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <span class="footer-logo">MarketMint</span>
+        <span class="footer-sub">Local AI Marketing Assistant &bull; Built for Hacktoberfest 2026 Week 2 "Side Hustle"</span>
+      </div>
+      <div class="footer-note">
+        <span>Powered by <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> &bull; Gemma 2B Open-Weight Model</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
